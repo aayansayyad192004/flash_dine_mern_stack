@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { Link as LinkR, NavLink } from "react-router-dom";
-import LogoImg from "../utils/Images/Logo.png";
+// import LogoImg from "../utils/Images/Logo.png";
 import {
   FavoriteBorder,
   MenuRounded,
@@ -25,6 +25,7 @@ const Nav = styled.div`
   z-index: 10;
   color: white;
 `;
+
 const NavContainer = styled.div`
   width: 100%;
   max-width: 1400px;
@@ -35,19 +36,27 @@ const NavContainer = styled.div`
   justify-content: space-between;
   font-size: 1rem;
 `;
+
 const NavLogo = styled(LinkR)`
-  width: 100%;
   display: flex;
   align-items: center;
   padding: 0 6px;
-  font-weight: 500;
-  font-size: 18px;
+  font-weight: bold;
+  font-size: 24px;
+  color: ${({ theme }) => theme.primary};
   text-decoration: none;
-  color: inherit;
+
+  &:hover {
+    color: ${({ theme }) => theme.text_secondary};
+  }
 `;
+
+/* Keeping Logo here in case you want it later
 const Logo = styled.img`
   height: 34px;
 `;
+*/
+
 const NavItems = styled.ul`
   width: 100%;
   display: flex;
@@ -61,6 +70,7 @@ const NavItems = styled.ul`
     display: none;
   }
 `;
+
 const Navlink = styled(NavLink)`
   display: flex;
   align-items: center;
@@ -69,14 +79,17 @@ const Navlink = styled(NavLink)`
   cursor: pointer;
   transition: all 1s slide-in;
   text-decoration: none;
+
   &:hover {
     color: ${({ theme }) => theme.primary};
   }
+
   &.active {
     color: ${({ theme }) => theme.primary};
     border-bottom: 1.8px solid ${({ theme }) => theme.primary};
   }
 `;
+
 const ButtonContainer = styled.div`
   width: 100%;
   height: 100%;
@@ -86,6 +99,7 @@ const ButtonContainer = styled.div`
   align-items: center;
   padding: 0 6px;
   color: ${({ theme }) => theme.primary};
+
   @media screen and (max-width: 768px) {
     display: none;
   }
@@ -94,14 +108,17 @@ const ButtonContainer = styled.div`
 const MobileIcon = styled.div`
   color: ${({ theme }) => theme.text_primary};
   display: none;
+
   @media screen and (max-width: 768px) {
     display: flex;
     align-items: center;
   }
 `;
+
 const MobileIcons = styled.div`
   color: ${({ theme }) => theme.text_primary};
   display: none;
+
   @media screen and (max-width: 768px) {
     display: flex;
     align-items: center;
@@ -139,6 +156,7 @@ const TextButton = styled.span`
   font-size: 16px;
   transition: all 0.3s ease;
   font-weight: 600;
+
   &:hover {
     color: ${({ theme }) => theme.primary};
   }
@@ -147,15 +165,15 @@ const TextButton = styled.span`
 const Navbar = ({ setOpenAuth, openAuth, currentUser }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch();
+
   return (
     <Nav>
       <NavContainer>
         <MobileIcon onClick={() => setIsOpen(!isOpen)}>
           <MenuRounded style={{ color: "inherit" }} />
         </MobileIcon>
-        <NavLogo to="/">
-          <Logo src={LogoImg} />
-        </NavLogo>
+
+        <NavLogo to="/">FlashDine</NavLogo>
 
         <MobileIcons>
           <Navlink to="/search">
@@ -193,19 +211,11 @@ const Navbar = ({ setOpenAuth, openAuth, currentUser }) => {
             <Navlink to="/contact" onClick={() => setIsOpen(false)}>
               Contact
             </Navlink>
+
             {currentUser ? (
-              <>
-                <TextButton onClick={() => dispatch(logout())}>
-                  Logout
-                </TextButton>
-              </>
+              <TextButton onClick={() => dispatch(logout())}>Logout</TextButton>
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                }}
-              >
+              <div style={{ display: "flex", gap: "12px" }}>
                 <Button
                   text="Sign Up"
                   outlined
@@ -226,6 +236,7 @@ const Navbar = ({ setOpenAuth, openAuth, currentUser }) => {
           <Navlink to="/search">
             <SearchRounded sx={{ color: "inherit", fontSize: "30px" }} />
           </Navlink>
+
           {currentUser ? (
             <>
               <Navlink to="/favorite">
