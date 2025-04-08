@@ -6,6 +6,13 @@ type Props = {
 };
 
 const OrderStatusDetail = ({ order }: Props) => {
+  if (!order || !order.cartItems || !order.deliveryDetails) {
+    return <div>Invalid order details</div>;
+  }
+
+  const totalAmount = Number(order.totalAmount);
+  const isValidAmount = !isNaN(totalAmount);
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col">
@@ -28,8 +35,8 @@ const OrderStatusDetail = ({ order }: Props) => {
       <Separator />
       <div className="flex flex-col">
         <span className="font-bold">Total</span>
-        {/* Divide by 100 to convert paise to rupees and display properly */}
-        <span>₹{(order.totalAmount / 100).toFixed(2)}</span>
+        {/* Directly display totalAmount in rupees */}
+        <span>₹{isValidAmount ? totalAmount.toFixed(2) : "0.00"}</span>
       </div>
     </div>
   );
