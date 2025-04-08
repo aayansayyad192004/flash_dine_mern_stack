@@ -22,18 +22,25 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   } = useAuth0();
 
   const { pathname } = useLocation();
-
   const { currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
   const onLogin = async () => {
-    await loginWithRedirect({
-      appState: {
-        returnTo: pathname,
-      },
-    });
+    if (!isAuthenticated && !isAuthLoading) {
+      await loginWithRedirect({
+        appState: {
+          returnTo: pathname,
+        },
+      });
+    }
   };
 
-  if (!isAuthenticated) {
+  // Show loading if auth or user data is being fetched
+  if (isAuthLoading || isGetUserLoading || isLoading) {
+    return <LoadingButton />;
+  }
+
+  // Only show login button if user is not authenticated or user data failed
+  if (!isAuthenticated || !currentUser) {
     return (
       <Button
         onClick={onLogin}
@@ -44,10 +51,7 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     );
   }
 
-  if (isAuthLoading || !currentUser || isLoading) {
-    return <LoadingButton />;
-  }
-
+  // Authenticated and user data loaded
   return (
     <Dialog>
       <DialogTrigger asChild>
