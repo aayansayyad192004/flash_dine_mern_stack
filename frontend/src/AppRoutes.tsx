@@ -30,7 +30,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/detail/:restaurantId"
+        path="/detail/:id"
         element={
           <Layout showHero={false}>
             <DetailPage />
