@@ -36,8 +36,8 @@ const OrderStatusDetail = ({ order }: Props) => {
       <div className="flex flex-col">
         <span className="font-bold">Total</span>
         {/* Directly display totalAmount in rupees */}
-        <span>₹{isValidAmount ? totalAmount.toFixed(2) : "0.00"}</span>
-      </div>
+        <span>₹{(order.totalAmount / 10000).toFixed(2)}</span>
+        </div>
     </div>
   );
 };
