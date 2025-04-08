@@ -23,11 +23,8 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
 
   const { pathname } = useLocation();
 
-  // ✅ Fix: rename data to currentUser
-  const {
-    currentUser,
-    isLoading: isGetUserLoading,
-  } = useGetMyUser();
+  // ✅ No destructuring `data`, using directly returned `currentUser`
+  const { currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
   const onLogin = async () => {
     await loginWithRedirect({
