@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Restaurant from "../models/restaurant";
 
-const { validationResult } = require('express-validator');
+const { validationResult } = require("express-validator");
 
 const getRestaurant = async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
@@ -30,7 +30,6 @@ const getRestaurant = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: "something went wrong" });
   }
 };
-
 
 const searchRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -76,11 +75,17 @@ const searchRestaurant = async (req: Request, res: Response): Promise<void> => {
     const pageSize = 10;
     const skip = (page - 1) * pageSize;
 
-    const restaurants = await Restaurant.find(query)
+    const restaurantsRaw = await Restaurant.find(query)
       .sort({ [sortOption]: 1 })
       .skip(skip)
       .limit(pageSize)
       .lean();
+
+    // ✅ Fix: convert _id to string for each restaurant
+    const restaurants = restaurantsRaw.map(({ _id, ...rest }) => ({
+      _id: _id.toString(),
+      ...rest,
+    }));
 
     const total = await Restaurant.countDocuments(query);
 
