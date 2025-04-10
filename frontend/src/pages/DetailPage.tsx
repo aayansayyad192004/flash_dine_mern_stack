@@ -114,7 +114,15 @@ const DetailPage = () => {
               removeFromCart={removeFromCart}
             />
             <CardFooter>
-              <CheckoutButton />
+            <CheckoutButton
+  restaurantId={restaurant._id}
+  cartItems={cartItems}
+  totalPrice={cartItems.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  )}
+/>
+
             </CardFooter>
           </Card>
         </div>
