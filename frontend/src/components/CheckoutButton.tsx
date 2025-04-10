@@ -7,6 +7,7 @@ import UserProfileForm, {
   UserFormData,
 } from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
+import { useState } from "react";
 
 type Props = {
   onCheckout: (userFormData: UserFormData) => void;
@@ -23,8 +24,9 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
 
   const { pathname } = useLocation();
 
-  // ✅ No destructuring `data`, using directly returned `currentUser`
   const { currentUser, isLoading: isGetUserLoading } = useGetMyUser();
+
+  const [showRazorpay, setShowRazorpay] = useState(false); // ✅ NEW STATE
 
   const onLogin = async () => {
     await loginWithRedirect({
@@ -46,6 +48,11 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     return <LoadingButton />;
   }
 
+  const handleCheckout = (formData: UserFormData) => {
+    onCheckout(formData); // ✅ Your existing logic
+    setShowRazorpay(true); // ✅ Show Razorpay after form is submitted
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -56,10 +63,11 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
       <DialogContent className="max-w-[425px] md:min-w-[700px] bg-gray-50">
         <UserProfileForm
           currentUser={currentUser}
-          onSave={onCheckout}
+          onSave={handleCheckout}
           isLoading={isGetUserLoading}
           title="Confirm Delivery Details"
           buttonText="Continue to payment"
+          showRazorpayButton={showRazorpay} // ✅ Pass the toggle here
         />
       </DialogContent>
     </Dialog>
