@@ -7,7 +7,7 @@ const Footer = () => {
           <span className="text-white">.com</span>
         </span>
         <div className="flex gap-6 text-white text-sm font-medium">
-        <p>&copy; 2024 PrepAhead. All rights reserved.</p>
+        <p>&copy; 2025 FlashDine.com. All rights reserved.</p>
 
         </div>
       </div>
