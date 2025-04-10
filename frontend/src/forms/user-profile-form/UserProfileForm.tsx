@@ -32,7 +32,6 @@ type Props = {
   isLoading: boolean;
   title?: string;
   buttonText?: string;
-  showRazorpayButton?: boolean; // ✅ NEW PROP
 };
 
 const UserProfileForm = ({
@@ -41,7 +40,6 @@ const UserProfileForm = ({
   currentUser,
   title = "User Profile",
   buttonText = "Submit",
-  showRazorpayButton = false, // ✅ DEFAULT VALUE
 }: Props) => {
   const form = useForm<UserFormData>({
     resolver: zodResolver(formSchema),
@@ -64,7 +62,6 @@ const UserProfileForm = ({
             View and change your profile information here
           </FormDescription>
         </div>
-
         <FormField
           control={form.control}
           name="email"
@@ -72,7 +69,7 @@ const UserProfileForm = ({
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input {...field}className="bg-white" />
+                <Input {...field} disabled className="bg-white" />
               </FormControl>
             </FormItem>
           )}
@@ -133,16 +130,8 @@ const UserProfileForm = ({
             )}
           />
         </div>
-
         {isLoading ? (
           <LoadingButton />
-        ) : showRazorpayButton ? (
-          <div
-            className="razorpay-payment-button"
-            dangerouslySetInnerHTML={{
-              __html: `<form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_QHS8pZKyf4PAGY" async></script></form>`,
-            }}
-          />
         ) : (
           <Button type="submit" className="bg-orange-500">
             {buttonText}
