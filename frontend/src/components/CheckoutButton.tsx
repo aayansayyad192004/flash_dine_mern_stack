@@ -34,13 +34,7 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     });
   };
 
-  if (!isAuthenticated) {
-    return (
-      <Button onClick={onLogin} className="bg-orange-500 flex-1">
-        Log in to check out
-      </Button>
-    );
-  }
+  
 
   if (isAuthLoading || !currentUser || isLoading) {
     return <LoadingButton />;
