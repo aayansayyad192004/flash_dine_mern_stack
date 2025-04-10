@@ -10,13 +10,13 @@ const CheckoutButton = () => {
     script.async = true;
 
     if (scriptContainerRef.current) {
-      scriptContainerRef.current.innerHTML = ""; // Clear any previous scripts
+      scriptContainerRef.current.innerHTML = ""; // clear previous Razorpay script
       scriptContainerRef.current.appendChild(script);
     }
   }, []);
 
   return (
-    <div className="flex justify-center mt-4">
+    <div className="flex justify-center w-full">
       <form>
         <div ref={scriptContainerRef}></div>
       </form>

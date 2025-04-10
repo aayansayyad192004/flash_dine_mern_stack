@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 
 import { useGetRestaurant } from "@/api/RestaurantApi";
-import { useCreateCheckoutSession } from "@/api/OrderApi";
 
 import MenuItem from "@/components/MenuItem";
 import OrderSummary from "@/components/OrderSummary";
@@ -13,7 +12,6 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card, CardFooter } from "@/components/ui/card";
 
 import { MenuItem as MenuItemType } from "../types";
-import { UserFormData } from "@/forms/user-profile-form/UserProfileForm";
 
 export type CartItem = {
   _id: string;
@@ -25,14 +23,9 @@ export type CartItem = {
 const DetailPage = () => {
   const { restaurantId } = useParams();
 
-  console.log("restaurantId from useParams:", restaurantId); // ✅ Debug
-
-  if (!restaurantId) {
-    return <Navigate to="/" replace />;
-  }
+  if (!restaurantId) return <Navigate to="/" replace />;
 
   const { restaurant, isLoading } = useGetRestaurant(restaurantId);
-  const { createCheckoutSession, isLoading: isCheckoutLoading } = useCreateCheckoutSession();
 
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const storedCartItems = sessionStorage.getItem(`cartItems-${restaurantId}`);
@@ -89,32 +82,7 @@ const DetailPage = () => {
     });
   };
 
-  const onCheckout = async (userFormData: UserFormData) => {
-    if (!restaurant) return;
-
-    const checkoutData = {
-      cartItems: cartItems.map((cartItem) => ({
-        menuItemId: cartItem._id,
-        name: cartItem.name,
-        quantity: cartItem.quantity.toString(),
-      })),
-      restaurantId: restaurant._id,
-      deliveryDetails: {
-        name: userFormData.name,
-        addressLine1: userFormData.addressLine1,
-        city: userFormData.city,
-        country: userFormData.country,
-        email: userFormData.email as string,
-      },
-    };
-
-    const data = await createCheckoutSession(checkoutData);
-    window.location.href = data.url;
-  };
-
-  if (isLoading || !restaurant) {
-    return "Loading...";
-  }
+  if (isLoading || !restaurant) return "Loading...";
 
   return (
     <div className="flex flex-col gap-10">
@@ -146,11 +114,7 @@ const DetailPage = () => {
               removeFromCart={removeFromCart}
             />
             <CardFooter>
-              <CheckoutButton
-                disabled={cartItems.length === 0}
-                onCheckout={onCheckout}
-                isLoading={isCheckoutLoading}
-              />
+              <CheckoutButton />
             </CardFooter>
           </Card>
         </div>
