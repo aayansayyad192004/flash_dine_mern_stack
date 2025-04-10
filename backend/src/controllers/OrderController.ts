@@ -3,15 +3,15 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import Restaurant, { MenuItemType } from "../models/restaurant";
 import Order from "../models/order";
-import dotenv from "dotenv";
-dotenv.config();
 
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID ,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+  key_id: process.env.RAZORPAY_KEY_ID as string,
+  key_secret: process.env.RAZORPAY_KEY_SECRET as string,
 });
 
-const getMyOrders = async (req: Request, res: Response): Promise<void> => {
+const FRONTEND_URL = process.env.FRONTEND_URL as string;
+
+const getMyOrders = async (req: Request, res: Response) => {
   try {
     const orders = await Order.find({ user: req.userId })
       .populate("restaurant")
@@ -19,7 +19,7 @@ const getMyOrders = async (req: Request, res: Response): Promise<void> => {
 
     res.json(orders);
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -39,23 +39,17 @@ type CheckoutSessionRequest = {
   restaurantId: string;
 };
 
-const createCheckoutSession = async (req: Request, res: Response): Promise<void> => {
+const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const checkoutSessionRequest: CheckoutSessionRequest = req.body;
 
-    const restaurant = await Restaurant.findById(checkoutSessionRequest.restaurantId);
+    const restaurant = await Restaurant.findById(
+      checkoutSessionRequest.restaurantId
+    );
+
     if (!restaurant) {
       throw new Error("Restaurant not found");
     }
-
-    const newOrder = new Order({
-      restaurant: restaurant,
-      user: req.userId,
-      status: "placed",
-      deliveryDetails: checkoutSessionRequest.deliveryDetails,
-      cartItems: checkoutSessionRequest.cartItems,
-      createdAt: new Date(),
-    });
 
     const totalAmount = calculateTotalAmount(
       checkoutSessionRequest,
@@ -63,80 +57,87 @@ const createCheckoutSession = async (req: Request, res: Response): Promise<void>
       restaurant.deliveryPrice
     );
 
-    const razorpayOrder = await razorpay.orders.create({
+    const newOrder = new Order({
+      restaurant: restaurant,
+      user: req.userId,
+      status: "created",
+      deliveryDetails: checkoutSessionRequest.deliveryDetails,
+      cartItems: checkoutSessionRequest.cartItems,
+      totalAmount,
+      createdAt: new Date(),
+    });
+
+    await newOrder.save();
+
+    const options = {
       amount: totalAmount,
       currency: "INR",
       receipt: newOrder._id.toString(),
-      payment_capture: true,
-    });
+    };
 
-    newOrder.totalAmount = totalAmount;
-    await newOrder.save();
+    const razorpayOrder = await razorpay.orders.create(options);
 
     res.json({
-      razorpayOrderId: razorpayOrder.id,
-      orderId: newOrder._id,
+      orderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
     });
   } catch (error: any) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };
 
-const calculateTotalAmount = (
-  session: CheckoutSessionRequest,
-  menuItems: MenuItemType[],
-  deliveryPrice: number
-): number => {
-  let amount = 0;
-
-  session.cartItems.forEach((cartItem) => {
-    const menuItem = menuItems.find(
-      (item) => item._id.toString() === cartItem.menuItemId.toString()
-    );
-
-    if (!menuItem) {
-      throw new Error(`Menu item not found: ${cartItem.menuItemId}`);
-    }
-
-    amount += menuItem.price * parseInt(cartItem.quantity);
-  });
-
-  return (amount + deliveryPrice) * 100; // in paisa
-};
-
-const razorpayWebhookHandler = async (req: Request, res: Response): Promise<void> => {
+const razorpayWebhookHandler = async (req: Request, res: Response) => {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET as string;
 
   const signature = req.headers["x-razorpay-signature"] as string;
-  const body = JSON.stringify(req.body);
-
-  const expectedSignature = crypto
+  const generatedSignature = crypto
     .createHmac("sha256", secret)
-    .update(body)
+    .update(JSON.stringify(req.body))
     .digest("hex");
 
-  if (signature !== expectedSignature) {
-    res.status(400).json({ message: "Invalid signature" });
-    return;
+  if (generatedSignature !== signature) {
+    return res.status(400).json({ message: "Invalid signature" });
   }
 
   const event = req.body;
 
   if (event.event === "payment.captured") {
     const razorpayOrderId = event.payload.payment.entity.order_id;
-    const order = await Order.findOne({ _id: event.payload.payment.entity.receipt });
 
-    if (order) {
-      order.status = "paid";
-      order.totalAmount = event.payload.payment.entity.amount;
-      await order.save();
+    const order = await Order.findOne({ _id: razorpayOrderId });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
     }
+
+    order.status = "paid";
+    await order.save();
   }
 
-  res.status(200).json({ status: "ok" });
+  res.status(200).json({ received: true });
+};
+
+const calculateTotalAmount = (
+  checkoutSessionRequest: CheckoutSessionRequest,
+  menuItems: MenuItemType[],
+  deliveryPrice: number
+) => {
+  let total = 0;
+
+  checkoutSessionRequest.cartItems.forEach((cartItem) => {
+    const item = menuItems.find(
+      (i) => i._id.toString() === cartItem.menuItemId.toString()
+    );
+
+    if (item) {
+      total += item.price * parseInt(cartItem.quantity);
+    }
+  });
+
+  total += deliveryPrice;
+  return total * 100; // Convert to paise
 };
 
 export default {
