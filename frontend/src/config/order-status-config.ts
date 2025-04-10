@@ -1,3 +1,4 @@
+// constants/orderStatus.ts
 import { OrderStatus } from "@/types";
 
 type OrderStatusInfo = {
