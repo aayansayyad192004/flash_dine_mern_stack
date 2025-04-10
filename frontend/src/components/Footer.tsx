@@ -7,18 +7,8 @@ const Footer = () => {
           <span className="text-white">.com</span>
         </span>
         <div className="flex gap-6 text-white text-sm font-medium">
-          <a
-            href="#"
-            className="hover:text-lime-300 hover:underline underline-offset-4 transition duration-200"
-          >
-            Privacy Policy
-          </a>
-          <a
-            href="#"
-            className="hover:text-lime-300 hover:underline underline-offset-4 transition duration-200"
-          >
-            Terms of Service
-          </a>
+        <p>&copy; 2024 PrepAhead. All rights reserved.</p>
+
         </div>
       </div>
     </footer>
