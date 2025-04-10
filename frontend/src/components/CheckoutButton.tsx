@@ -1,69 +1,68 @@
-import { useEffect, useRef } from "react";
-import axios from "axios";
-
-type CartItem = {
-  _id: string;
-  name: string;
-  price: number;
-  quantity: number;
-};
+import { useAuth0 } from "@auth0/auth0-react";
+import { useLocation } from "react-router-dom";
+import { Button } from "./ui/button";
+import LoadingButton from "./LoadingButton";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import UserProfileForm, {
+  UserFormData,
+} from "@/forms/user-profile-form/UserProfileForm";
+import { useGetMyUser } from "@/api/MyUserApi";
 
 type Props = {
-  restaurantId: string;
-  cartItems: CartItem[];
-  totalPrice: number;
+  onCheckout: (userFormData: UserFormData) => void;
+  disabled: boolean;
+  isLoading: boolean;
 };
 
-const CheckoutButton = ({ restaurantId, cartItems, totalPrice }: Props) => {
-  const scriptContainerRef = useRef<HTMLDivElement>(null);
+const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
+  const {
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    loginWithRedirect,
+  } = useAuth0();
 
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/payment-button.js";
-    script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY");
-    script.async = true;
+  const { pathname } = useLocation();
 
-    if (scriptContainerRef.current) {
-      scriptContainerRef.current.innerHTML = ""; // clear previous Razorpay script
-      scriptContainerRef.current.appendChild(script);
-    }
+  // ✅ No destructuring `data`, using directly returned `currentUser`
+  const { currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
-    // Razorpay success handler
-    const handlePaymentSuccess = async () => {
-      try {
-        await axios.post("/api/orders", {
-          restaurantId,
-          cartItems,
-          totalPrice,
-        });
+  const onLogin = async () => {
+    await loginWithRedirect({
+      appState: {
+        returnTo: pathname,
+      },
+    });
+  };
 
-        // Optional: clear sessionStorage cart after placing order
-        sessionStorage.removeItem(`cartItems-${restaurantId}`);
-      } catch (error) {
-        console.error("Error placing order after payment", error);
-      }
-    };
+  if (!isAuthenticated) {
+    return (
+      <Button onClick={onLogin} className="bg-orange-500 flex-1">
+        Log in to check out
+      </Button>
+    );
+  }
 
-    // Listen to Razorpay success (hacky workaround via window event)
-    const razorpaySuccessListener = (e: any) => {
-      if (e?.data?.event === "razorpay.success") {
-        handlePaymentSuccess();
-      }
-    };
-
-    window.addEventListener("message", razorpaySuccessListener);
-
-    return () => {
-      window.removeEventListener("message", razorpaySuccessListener);
-    };
-  }, [restaurantId, cartItems, totalPrice]);
+  if (isAuthLoading || !currentUser || isLoading) {
+    return <LoadingButton />;
+  }
 
   return (
-    <div className="flex justify-center w-full">
-      <form>
-        <div ref={scriptContainerRef}></div>
-      </form>
-    </div>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button disabled={disabled} className="bg-orange-500 flex-1">
+          Go to checkout
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-[425px] md:min-w-[700px] bg-gray-50">
+        <UserProfileForm
+          currentUser={currentUser}
+          onSave={onCheckout}
+          isLoading={isGetUserLoading}
+          title="Confirm Delivery Details"
+          buttonText="Continue to payment"
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 
