@@ -60,7 +60,7 @@ const createCheckoutSession = async (req: Request, res: Response) => {
     const newOrder = new Order({
       restaurant: restaurant,
       user: req.userId,
-      status: "created",
+      status: "placed",
       deliveryDetails: checkoutSessionRequest.deliveryDetails,
       cartItems: checkoutSessionRequest.cartItems,
       totalAmount,
