@@ -72,7 +72,7 @@ const UserProfileForm = ({
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input {...field} disabled className="bg-white" />
+                <Input {...field}className="bg-white" />
               </FormControl>
             </FormItem>
           )}
