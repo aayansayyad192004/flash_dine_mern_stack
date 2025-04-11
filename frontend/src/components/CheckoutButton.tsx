@@ -7,17 +7,7 @@ import UserProfileForm, {
   UserFormData,
 } from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
-import { useEffect, useRef, useState } from "react";
-
-// 👇 Add type for MyUser if not already defined
-type MyUser = {
-  name?: string;
-  addressLine1?: string;
-  city?: string;
-  country?: string;
-  phone?: string;
-  email?: string;
-};
+import { useState, useRef } from "react";
 
 type Props = {
   onCheckout: (userFormData: UserFormData) => void;
@@ -39,47 +29,24 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     await loginWithRedirect({ appState: { returnTo: pathname } });
   };
 
-  const renderRazorpayButton = () => {
+  const handleFormSave = (formData: UserFormData) => {
+    onCheckout(formData);
+    console.log("Checkout triggered for restaurant ID:", restaurantId);
+
+    // Show Razorpay button AFTER user submits profile form
+    setShowPaymentButton(true);
+
+    // Clear previous Razorpay button if it exists
     if (razorpayFormRef.current) {
       razorpayFormRef.current.innerHTML = "";
+
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/payment-button.js";
-      script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY"); // Your Razorpay Button ID
+      script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY"); // Replace with your own Razorpay button ID
       script.async = true;
       razorpayFormRef.current.appendChild(script);
     }
   };
-
-  // ✅ Mapping function to convert MyUser to UserFormData
-  const mapToUserFormData = (user: MyUser): UserFormData => ({
-    name: user.name || "",
-    addressLine1: user.addressLine1 || "",
-    city: user.city || "",
-    country: user.country || "",
-    phone: user.phone || "",
-    email: user.email || "",
-  });
-
-  // 🔍 Check if user already has profile filled
-  const isUserProfileComplete =
-    currentUser?.name &&
-    currentUser?.addressLine1 &&
-    currentUser?.city &&
-    currentUser?.country;
-
-  useEffect(() => {
-    if (
-      isUserProfileComplete &&
-      isAuthenticated &&
-      !isGetUserLoading &&
-      currentUser
-    ) {
-      const formData = mapToUserFormData(currentUser);
-      onCheckout(formData); // Trigger backend order logic
-      setShowPaymentButton(true); // Show Razorpay
-      renderRazorpayButton();
-    }
-  }, [currentUser, isAuthenticated]);
 
   if (!isAuthenticated) {
     return (
@@ -89,7 +56,7 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     );
   }
 
-  if (isAuthLoading || isGetUserLoading || isLoading) {
+  if (isAuthLoading || !currentUser || isLoading) {
     return <LoadingButton />;
   }
 
@@ -101,26 +68,15 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[425px] md:min-w-[700px] bg-gray-50">
-        {!isUserProfileComplete ? (
-          <UserProfileForm
-            currentUser={mapToUserFormData(currentUser || {})} // ✅ safe fallback
-            onSave={(formData: UserFormData) => {
-              onCheckout(formData);
-              setShowPaymentButton(true);
-              renderRazorpayButton();
-            }}
-            isLoading={isGetUserLoading}
-            title="Confirm Delivery Details"
-            buttonText="Continue to payment"
-          />
-        ) : (
-          <>
-            <p className="text-gray-700 text-lg font-medium">
-              Profile already complete. Proceed to payment:
-            </p>
-          </>
-        )}
+        <UserProfileForm
+          currentUser={currentUser}
+          onSave={handleFormSave}
+          isLoading={isGetUserLoading}
+          title="Confirm Delivery Details"
+          buttonText="Continue to payment"
+        />
 
+        {/* ✅ Razorpay Button appears only after profile form is submitted */}
         {showPaymentButton && (
           <div ref={razorpayFormRef} className="mt-4"></div>
         )}
