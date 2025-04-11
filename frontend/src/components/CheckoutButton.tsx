@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import LoadingButton from "./LoadingButton";
 import { useGetMyUser } from "@/api/MyUserApi";
@@ -13,7 +13,6 @@ type Props = {
 const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
   const onLogin = async () => {
@@ -27,10 +26,10 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   const handleCheckout = async () => {
     try {
       const order = await onCheckout();
-      if (order && order._id) {
-        navigate(`/payment?orderId=${order._id}`);
+      if (order?.url) {
+        window.location.href = order.url;
       } else {
-        console.error("Order ID not found.");
+        console.error("Checkout session URL not available.");
       }
     } catch (error) {
       console.error("Checkout failed:", error);

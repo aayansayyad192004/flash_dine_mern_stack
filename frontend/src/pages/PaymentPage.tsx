@@ -1,4 +1,3 @@
-// src/pages/PaymentPage.tsx
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -15,7 +14,7 @@ const PaymentPage = () => {
 
     const container = document.getElementById("razorpay-button-container");
     if (container) {
-      container.innerHTML = ""; // Clear if already injected
+      container.innerHTML = "";
       container.appendChild(script);
     }
   }, []);
