@@ -26,19 +26,17 @@ export const useGetMyUser = () => {
     return response.json();
   };
 
-  const {
-    data,
-    isLoading,
-    error,
-  } = useQuery("fetchCurrentUser", getMyUserRequest);
+  const { data, isLoading, error } = useQuery("fetchCurrentUser", getMyUserRequest);
 
   if (error) {
     toast.error(error.toString());
   }
 
-  // ✅ just changed the return to match expected structure
+  // ✅ fix: return the original structure from useQuery
   return { data, isLoading, error };
 };
+
+// --- other exports unchanged below ---
 
 type CreateUserRequest = {
   auth0Id: string;
