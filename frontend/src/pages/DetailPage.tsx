@@ -3,6 +3,7 @@ import { useParams, Navigate } from "react-router-dom";
 
 import { useGetRestaurant } from "@/api/RestaurantApi";
 import { useCreateCheckoutSession } from "@/api/OrderApi";
+import { useGetMyUser } from "@/api/MyUserApi"; // ✅ Correct import
 
 import MenuItem from "@/components/MenuItem";
 import OrderSummary from "@/components/OrderSummary";
@@ -13,7 +14,6 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card, CardFooter } from "@/components/ui/card";
 
 import { MenuItem as MenuItemType } from "../types";
-import { UserFormData } from "@/forms/user-profile-form/UserProfileForm";
 
 export type CartItem = {
   _id: string;
@@ -25,14 +25,13 @@ export type CartItem = {
 const DetailPage = () => {
   const { restaurantId } = useParams();
 
-  console.log("restaurantId from useParams:", restaurantId); // ✅ Debug
-
   if (!restaurantId) {
     return <Navigate to="/" replace />;
   }
 
   const { restaurant, isLoading } = useGetRestaurant(restaurantId);
   const { createCheckoutSession, isLoading: isCheckoutLoading } = useCreateCheckoutSession();
+  const { data :currentUser } = useGetMyUser(); // ✅ Fixed usage
 
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const storedCartItems = sessionStorage.getItem(`cartItems-${restaurantId}`);
@@ -41,9 +40,7 @@ const DetailPage = () => {
 
   const addToCart = (menuItem: MenuItemType) => {
     setCartItems((prevCartItems) => {
-      const existingCartItem = prevCartItems.find(
-        (cartItem) => cartItem._id === menuItem._id
-      );
+      const existingCartItem = prevCartItems.find((cartItem) => cartItem._id === menuItem._id);
 
       let updatedCartItems;
 
@@ -65,32 +62,21 @@ const DetailPage = () => {
         ];
       }
 
-      sessionStorage.setItem(
-        `cartItems-${restaurantId}`,
-        JSON.stringify(updatedCartItems)
-      );
-
+      sessionStorage.setItem(`cartItems-${restaurantId}`, JSON.stringify(updatedCartItems));
       return updatedCartItems;
     });
   };
 
   const removeFromCart = (cartItem: CartItem) => {
     setCartItems((prevCartItems) => {
-      const updatedCartItems = prevCartItems.filter(
-        (item) => cartItem._id !== item._id
-      );
-
-      sessionStorage.setItem(
-        `cartItems-${restaurantId}`,
-        JSON.stringify(updatedCartItems)
-      );
-
+      const updatedCartItems = prevCartItems.filter((item) => cartItem._id !== item._id);
+      sessionStorage.setItem(`cartItems-${restaurantId}`, JSON.stringify(updatedCartItems));
       return updatedCartItems;
     });
   };
 
-  const onCheckout = async (userFormData: UserFormData) => {
-    if (!restaurant) return;
+  const onCheckout = async () => {
+    if (!restaurant || !currentUser) return;
 
     const checkoutData = {
       cartItems: cartItems.map((cartItem) => ({
@@ -100,11 +86,11 @@ const DetailPage = () => {
       })),
       restaurantId: restaurant._id,
       deliveryDetails: {
-        name: userFormData.name,
-        addressLine1: userFormData.addressLine1,
-        city: userFormData.city,
-        country: userFormData.country,
-        email: userFormData.email as string,
+        name: currentUser.name,
+        addressLine1: currentUser.addressLine1,
+        city: currentUser.city,
+        country: currentUser.country,
+        email: currentUser.email,
       },
     };
 
@@ -119,10 +105,12 @@ const DetailPage = () => {
   return (
     <div className="flex flex-col gap-10">
       <AspectRatio ratio={16 / 5}>
-        <img
-          src={restaurant.imageUrl}
-          className="rounded-md object-cover h-full w-full"
-        />
+      <img
+  src={restaurant.imageUrl || "/default-restaurant.jpg"}
+  className="rounded-md object-cover h-full w-full"
+  alt={ "Restaurant image"}
+/>
+
       </AspectRatio>
 
       <div className="grid md:grid-cols-[4fr_2fr] gap-5 md:px-32">

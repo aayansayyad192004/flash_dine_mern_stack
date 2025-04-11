@@ -1,4 +1,3 @@
-// src/components/CheckoutButton.tsx
 import { useAuth0 } from "@auth0/auth0-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
@@ -6,7 +5,7 @@ import LoadingButton from "./LoadingButton";
 import { useGetMyUser } from "@/api/MyUserApi";
 
 type Props = {
-  onCheckout: () => Promise<any>; // updated: no userFormData
+  onCheckout: () => Promise<any>;
   disabled: boolean;
   isLoading: boolean;
 };
