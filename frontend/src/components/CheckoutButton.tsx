@@ -11,7 +11,7 @@ type Props = {
   isLoading: boolean;
 };
 
-const CheckoutButton = ({  isLoading }: Props) => {
+const CheckoutButton = ({ isLoading }: Props) => {
   const {
     isAuthenticated,
     isLoading: isAuthLoading,
@@ -34,12 +34,15 @@ const CheckoutButton = ({  isLoading }: Props) => {
     if (isAuthenticated && razorpayRef.current) {
       razorpayRef.current.innerHTML = "";
 
+      const form = document.createElement("form");
       const script = document.createElement("script");
+
       script.src = "https://checkout.razorpay.com/v1/payment-button.js";
       script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY");
       script.async = true;
 
-      razorpayRef.current.appendChild(script);
+      form.appendChild(script);
+      razorpayRef.current.appendChild(form);
     }
   }, [isAuthenticated]);
 
