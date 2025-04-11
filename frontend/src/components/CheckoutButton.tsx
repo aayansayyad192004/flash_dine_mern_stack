@@ -7,6 +7,7 @@ import UserProfileForm, {
   UserFormData,
 } from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
+import { useState, useEffect } from "react";
 
 type Props = {
   onCheckout: (userFormData: UserFormData) => void;
@@ -22,9 +23,9 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   } = useAuth0();
 
   const { pathname } = useLocation();
+  const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
-  // ✅ No destructuring `data`, using directly returned `currentUser`
-  const { data : currentUser, isLoading: isGetUserLoading } = useGetMyUser();
+  const [showRazorpayButton, setShowRazorpayButton] = useState(false);
 
   const onLogin = async () => {
     await loginWithRedirect({
@@ -33,6 +34,26 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
       },
     });
   };
+
+  const handleCheckout = async (userFormData: UserFormData) => {
+    await onCheckout(userFormData);
+    setShowRazorpayButton(true);
+  };
+
+  useEffect(() => {
+    if (showRazorpayButton) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/payment-button.js";
+      script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY");
+      script.async = true;
+
+      const form = document.getElementById("razorpay-button-container");
+      if (form) {
+        form.innerHTML = ""; // Clear previous if any
+        form.appendChild(script);
+      }
+    }
+  }, [showRazorpayButton]);
 
   if (!isAuthenticated) {
     return (
@@ -56,11 +77,14 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
       <DialogContent className="max-w-[425px] md:min-w-[700px] bg-gray-50">
         <UserProfileForm
           currentUser={currentUser}
-          onSave={onCheckout}
+          onSave={handleCheckout}
           isLoading={isGetUserLoading}
           title="Confirm Delivery Details"
           buttonText="Continue to payment"
         />
+        {showRazorpayButton && (
+          <div id="razorpay-button-container" className="mt-4" />
+        )}
       </DialogContent>
     </Dialog>
   );
