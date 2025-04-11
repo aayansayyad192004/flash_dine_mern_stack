@@ -7,48 +7,74 @@ import UserProfileForm, {
   UserFormData,
 } from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
-import { useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 type Props = {
   onCheckout: (userFormData: UserFormData) => void;
   disabled: boolean;
   isLoading: boolean;
+  amount: number; // Dynamic amount in ₹ rupees
 };
 
-const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+const CheckoutButton = ({ onCheckout, disabled, isLoading, amount }: Props) => {
   const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
-
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
-  const razorpayFormRef = useRef<HTMLFormElement | null>(null);
-  const [showPaymentButton, setShowPaymentButton] = useState(false);
+  const [formData, setFormData] = useState<UserFormData | null>(null);
 
   const onLogin = async () => {
     await loginWithRedirect({ appState: { returnTo: pathname } });
   };
 
-  const renderRazorpayButton = () => {
-    if (razorpayFormRef.current) {
-      razorpayFormRef.current.innerHTML = "";
-
+  const loadRazorpayScript = () => {
+    const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+    if (!existingScript) {
       const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/payment-button.js";
-      script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY"); // Your Razorpay button ID
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
-
-      razorpayFormRef.current.appendChild(script);
+      document.body.appendChild(script);
     }
   };
 
-  const handleFormSave = (formData: UserFormData) => {
-    onCheckout(formData);
-    setShowPaymentButton(true);
+  useEffect(() => {
+    loadRazorpayScript();
+  }, []);
 
-    // Delay to ensure <form> is mounted before injecting script
-    setTimeout(() => {
-      renderRazorpayButton();
-    }, 100);
+  const handleFormSave = (data: UserFormData) => {
+    setFormData(data);
+    handlePayment(data);
+  };
+
+  const handlePayment = (userForm: UserFormData) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: Math.round(amount * 100), // Convert ₹ to paise
+      currency: "INR",
+      name: "Flash Dine",
+      
+      handler: function (response: any) {
+        console.log("✅ Razorpay Payment Success:", response);
+        onCheckout(userForm); // Trigger order placement here
+      },
+      prefill: {
+        name: userForm.name,
+        email: userForm.email,
+        contact: "8805296210", // You can replace with actual user phone
+      },
+      theme: {
+        color: "#F97316",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   };
 
   if (!isAuthenticated) {
@@ -76,12 +102,8 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
           onSave={handleFormSave}
           isLoading={isGetUserLoading}
           title="Confirm Delivery Details"
-          buttonText="Continue to payment"
+          buttonText="Pay Now"
         />
-
-        {showPaymentButton && (
-          <form ref={razorpayFormRef} className="mt-4" />
-        )}
       </DialogContent>
     </Dialog>
   );
