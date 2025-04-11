@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import LoadingButton from "./LoadingButton";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
@@ -18,34 +18,37 @@ type Props = {
 const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
-  const { restaurantId } = useParams();
 
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
-  const razorpayFormRef = useRef<HTMLDivElement | null>(null);
+  const razorpayFormRef = useRef<HTMLFormElement | null>(null);
   const [showPaymentButton, setShowPaymentButton] = useState(false);
 
   const onLogin = async () => {
     await loginWithRedirect({ appState: { returnTo: pathname } });
   };
 
-  const handleFormSave = (formData: UserFormData) => {
-    onCheckout(formData);
-    console.log("Checkout triggered for restaurant ID:", restaurantId);
-
-    // Show Razorpay button AFTER user submits profile form
-    setShowPaymentButton(true);
-
-    // Clear previous Razorpay button if it exists
+  const renderRazorpayButton = () => {
     if (razorpayFormRef.current) {
       razorpayFormRef.current.innerHTML = "";
 
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/payment-button.js";
-      script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY"); // Replace with your own Razorpay button ID
+      script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY"); // Your Razorpay button ID
       script.async = true;
+
       razorpayFormRef.current.appendChild(script);
     }
+  };
+
+  const handleFormSave = (formData: UserFormData) => {
+    onCheckout(formData);
+    setShowPaymentButton(true);
+
+    // Delay to ensure <form> is mounted before injecting script
+    setTimeout(() => {
+      renderRazorpayButton();
+    }, 100);
   };
 
   if (!isAuthenticated) {
@@ -56,7 +59,7 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     );
   }
 
-  if (isAuthLoading || !currentUser || isLoading) {
+  if (isAuthLoading || isGetUserLoading || !currentUser || isLoading) {
     return <LoadingButton />;
   }
 
@@ -76,9 +79,8 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
           buttonText="Continue to payment"
         />
 
-        {/* ✅ Razorpay Button appears only after profile form is submitted */}
         {showPaymentButton && (
-          <div ref={razorpayFormRef} className="mt-4"></div>
+          <form ref={razorpayFormRef} className="mt-4" />
         )}
       </DialogContent>
     </Dialog>
