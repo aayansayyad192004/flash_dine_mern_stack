@@ -3,14 +3,10 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import LoadingButton from "./LoadingButton";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
-import UserProfileForm, {
-  UserFormData,
-} from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
 
 type Props = {
-  onCheckout: (userFormData: UserFormData) => Promise<any>; // must return order
+  onCheckout: () => Promise<any>; // updated: no userFormData
   disabled: boolean;
   isLoading: boolean;
 };
@@ -29,9 +25,9 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     });
   };
 
-  const handleCheckout = async (userFormData: UserFormData) => {
+  const handleCheckout = async () => {
     try {
-      const order = await onCheckout(userFormData);
+      const order = await onCheckout();
       if (order && order._id) {
         navigate(`/payment?orderId=${order._id}`);
       } else {
@@ -50,27 +46,18 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     );
   }
 
-  if (isAuthLoading || !currentUser || isLoading) {
+  if (isAuthLoading || !currentUser || isLoading || isGetUserLoading) {
     return <LoadingButton />;
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button disabled={disabled} className="bg-orange-500 flex-1">
-          Go to checkout
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-[425px] md:min-w-[700px] bg-gray-50">
-        <UserProfileForm
-          currentUser={currentUser}
-          onSave={handleCheckout}
-          isLoading={isGetUserLoading}
-          title="Confirm Delivery Details"
-          buttonText="Continue to payment"
-        />
-      </DialogContent>
-    </Dialog>
+    <Button
+      onClick={handleCheckout}
+      disabled={disabled}
+      className="bg-orange-500 flex-1"
+    >
+      Proceed to Payment
+    </Button>
   );
 };
 
