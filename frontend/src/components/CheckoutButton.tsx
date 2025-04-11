@@ -4,9 +4,10 @@ import { Button } from "./ui/button";
 import LoadingButton from "./LoadingButton";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { useGetMyUser } from "@/api/MyUserApi";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
-  onCheckout: () => void; // You can leave this unused or optional now
+  onCheckout?: () => void;
   disabled: boolean;
   isLoading: boolean;
 };
@@ -21,6 +22,9 @@ const CheckoutButton = ({ disabled, isLoading }: Props) => {
   const { pathname } = useLocation();
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
+  const [open, setOpen] = useState(false);
+  const razorpayRef = useRef<HTMLDivElement>(null);
+
   const onLogin = async () => {
     await loginWithRedirect({
       appState: {
@@ -28,6 +32,19 @@ const CheckoutButton = ({ disabled, isLoading }: Props) => {
       },
     });
   };
+
+  useEffect(() => {
+    if (open && razorpayRef.current) {
+      razorpayRef.current.innerHTML = "";
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/payment-button.js";
+      script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY");
+      script.async = true;
+
+      razorpayRef.current.appendChild(script);
+    }
+  }, [open]);
 
   if (!isAuthenticated) {
     return (
@@ -42,7 +59,7 @@ const CheckoutButton = ({ disabled, isLoading }: Props) => {
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button disabled={disabled} className="bg-orange-500 flex-1">
           Go to checkout
@@ -50,11 +67,7 @@ const CheckoutButton = ({ disabled, isLoading }: Props) => {
       </DialogTrigger>
       <DialogContent className="max-w-[425px] md:min-w-[700px] bg-white py-6">
         <div className="w-full flex justify-center">
-          <div
-            dangerouslySetInnerHTML={{
-              __html: `<form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_QHS8pZKyf4PAGY" async></script></form>`,
-            }}
-          />
+          <div ref={razorpayRef}></div>
         </div>
       </DialogContent>
     </Dialog>
