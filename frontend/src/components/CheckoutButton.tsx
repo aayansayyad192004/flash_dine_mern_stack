@@ -9,6 +9,16 @@ import UserProfileForm, {
 import { useGetMyUser } from "@/api/MyUserApi";
 import { useEffect, useRef, useState } from "react";
 
+// 👇 Add type for MyUser if not already defined
+type MyUser = {
+  name?: string;
+  addressLine1?: string;
+  city?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+};
+
 type Props = {
   onCheckout: (userFormData: UserFormData) => void;
   disabled: boolean;
@@ -40,12 +50,32 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     }
   };
 
+  // ✅ Mapping function to convert MyUser to UserFormData
+  const mapToUserFormData = (user: MyUser): UserFormData => ({
+    name: user.name || "",
+    addressLine1: user.addressLine1 || "",
+    city: user.city || "",
+    country: user.country || "",
+    phone: user.phone || "",
+    email: user.email || "",
+  });
+
   // 🔍 Check if user already has profile filled
-  const isUserProfileComplete = currentUser?.name && currentUser?.address && currentUser?.phone;
+  const isUserProfileComplete =
+    currentUser?.name &&
+    currentUser?.addressLine1 &&
+    currentUser?.city &&
+    currentUser?.country;
 
   useEffect(() => {
-    if (isUserProfileComplete && isAuthenticated && !isGetUserLoading) {
-      onCheckout(currentUser); // Trigger backend order logic
+    if (
+      isUserProfileComplete &&
+      isAuthenticated &&
+      !isGetUserLoading &&
+      currentUser
+    ) {
+      const formData = mapToUserFormData(currentUser);
+      onCheckout(formData); // Trigger backend order logic
       setShowPaymentButton(true); // Show Razorpay
       renderRazorpayButton();
     }
@@ -73,7 +103,7 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
       <DialogContent className="max-w-[425px] md:min-w-[700px] bg-gray-50">
         {!isUserProfileComplete ? (
           <UserProfileForm
-            currentUser={currentUser}
+            currentUser={mapToUserFormData(currentUser || {})} // ✅ safe fallback
             onSave={(formData: UserFormData) => {
               onCheckout(formData);
               setShowPaymentButton(true);
@@ -85,7 +115,9 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
           />
         ) : (
           <>
-            <p className="text-gray-700 text-lg font-medium">Profile already complete. Proceed to payment:</p>
+            <p className="text-gray-700 text-lg font-medium">
+              Profile already complete. Proceed to payment:
+            </p>
           </>
         )}
 
