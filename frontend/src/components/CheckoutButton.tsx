@@ -3,9 +3,10 @@ import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import LoadingButton from "./LoadingButton";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
-import UserProfileForm, { UserFormData } from "@/forms/user-profile-form/UserProfileForm";
+import UserProfileForm, {
+  UserFormData,
+} from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
-import { useState } from "react";
 
 type Props = {
   onCheckout: (userFormData: UserFormData) => void;
@@ -13,53 +14,24 @@ type Props = {
   isLoading: boolean;
 };
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
 const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
-  const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
-  const { pathname } = useLocation();
-  const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
+  const {
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    loginWithRedirect,
+  } = useAuth0();
 
-  const [userFormData, setUserFormData] = useState<UserFormData | null>(null);
+  const { pathname } = useLocation();
+
+  // ✅ No destructuring `data`, using directly returned `currentUser`
+  const { data : currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
   const onLogin = async () => {
-    await loginWithRedirect({ appState: { returnTo: pathname } });
-  };
-
-  const handleFormSave = (formData: UserFormData) => {
-    setUserFormData(formData);
-    openRazorpay(formData);
-  };
-
-  const openRazorpay = (formData: UserFormData) => {
-    const options = {
-      key: "rzp_test_YourKeyHere", // replace with real Razorpay key
-      amount: 50000, // amount in paise (₹500)
-      currency: "INR",
-      name: "PetMe Adoption",
-      description: "Pet Adoption Order",
-      handler: function (response: any) {
-        console.log("✅ Payment Success:", response);
-
-        // Place the order now
-        onCheckout(formData);
+    await loginWithRedirect({
+      appState: {
+        returnTo: pathname,
       },
-      prefill: {
-        name: formData.name,
-        email: formData.email,
-        contact: "9999999999",
-      },
-      theme: {
-        color: "#F97316", // orange
-      },
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+    });
   };
 
   if (!isAuthenticated) {
@@ -70,7 +42,7 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     );
   }
 
-  if (isAuthLoading || isGetUserLoading || !currentUser || isLoading) {
+  if (isAuthLoading || !currentUser || isLoading) {
     return <LoadingButton />;
   }
 
@@ -84,7 +56,7 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
       <DialogContent className="max-w-[425px] md:min-w-[700px] bg-gray-50">
         <UserProfileForm
           currentUser={currentUser}
-          onSave={handleFormSave}
+          onSave={onCheckout}
           isLoading={isGetUserLoading}
           title="Confirm Delivery Details"
           buttonText="Continue to payment"
