@@ -3,17 +3,14 @@ import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import LoadingButton from "./LoadingButton";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
-import UserProfileForm, {
-  UserFormData,
-} from "@/forms/user-profile-form/UserProfileForm";
+import UserProfileForm, { UserFormData } from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Props = {
   onCheckout: (userFormData: UserFormData) => void;
   disabled: boolean;
   isLoading: boolean;
-  amount: number; // Dynamic amount in ₹ rupees
 };
 
 declare global {
@@ -22,54 +19,42 @@ declare global {
   }
 }
 
-const CheckoutButton = ({ onCheckout, disabled, isLoading, amount }: Props) => {
+const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
-  const [formData, setFormData] = useState<UserFormData | null>(null);
+  const [userFormData, setUserFormData] = useState<UserFormData | null>(null);
 
   const onLogin = async () => {
     await loginWithRedirect({ appState: { returnTo: pathname } });
   };
 
-  const loadRazorpayScript = () => {
-    const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      document.body.appendChild(script);
-    }
+  const handleFormSave = (formData: UserFormData) => {
+    setUserFormData(formData);
+    openRazorpay(formData);
   };
 
-  useEffect(() => {
-    loadRazorpayScript();
-  }, []);
-
-  const handleFormSave = (data: UserFormData) => {
-    setFormData(data);
-    handlePayment(data);
-  };
-
-  const handlePayment = (userForm: UserFormData) => {
+  const openRazorpay = (formData: UserFormData) => {
     const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: Math.round(amount * 100), // Convert ₹ to paise
+      key: "rzp_test_YourKeyHere", // replace with real Razorpay key
+      amount: 50000, // amount in paise (₹500)
       currency: "INR",
-      name: "Flash Dine",
-      
+      name: "PetMe Adoption",
+      description: "Pet Adoption Order",
       handler: function (response: any) {
-        console.log("✅ Razorpay Payment Success:", response);
-        onCheckout(userForm); // Trigger order placement here
+        console.log("✅ Payment Success:", response);
+
+        // Place the order now
+        onCheckout(formData);
       },
       prefill: {
-        name: userForm.name,
-        email: userForm.email,
-        contact: "8805296210", // You can replace with actual user phone
+        name: formData.name,
+        email: formData.email,
+        contact: "9999999999",
       },
       theme: {
-        color: "#F97316",
+        color: "#F97316", // orange
       },
     };
 
@@ -102,7 +87,7 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading, amount }: Props) => {
           onSave={handleFormSave}
           isLoading={isGetUserLoading}
           title="Confirm Delivery Details"
-          buttonText="Pay Now"
+          buttonText="Continue to payment"
         />
       </DialogContent>
     </Dialog>
