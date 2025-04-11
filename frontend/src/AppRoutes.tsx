@@ -8,7 +8,6 @@ import ManageRestaurantPage from "./pages/ManageRestaurantPage";
 import SearchPage from "./pages/SearchPage";
 import DetailPage from "./pages/DetailPage";
 import OrderStatusPage from "./pages/OrderStatusPage";
-import PaymentPage from "./pages/PaymentPage";
 
 const AppRoutes = () => {
   return (
@@ -67,14 +66,7 @@ const AppRoutes = () => {
           }
         />
         {/* ✅ You can protect the payment page too if needed */}
-        <Route
-          path="/payment"
-          element={
-            <Layout>
-              <PaymentPage />
-            </Layout>
-          }
-        />
+        
       </Route>
 
       {/* Catch-all should always be last */}

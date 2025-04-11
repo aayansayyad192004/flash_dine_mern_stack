@@ -1,16 +1,15 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
-import LoadingButton from "./LoadingButton";
 import { useGetMyUser } from "@/api/MyUserApi";
+import { toast } from "sonner"; // or your toast library
+import { useEffect } from "react";
 
 type Props = {
-  onCheckout: () => Promise<any>;
   disabled: boolean;
-  isLoading: boolean;
 };
 
-const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
+const CheckoutButton = ({ disabled }: Props) => {
   const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
@@ -23,18 +22,10 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     });
   };
 
-  const handleCheckout = async () => {
-    try {
-      const order = await onCheckout();
-      if (order?.url) {
-        window.location.href = order.url;
-      } else {
-        console.error("Checkout session URL not available.");
-      }
-    } catch (error) {
-      console.error("Checkout failed:", error);
-    }
-  };
+  useEffect(() => {
+    // Trigger popup when component mounts (simulate order placed)
+    toast.success("Your order has been placed!");
+  }, []);
 
   if (!isAuthenticated) {
     return (
@@ -44,18 +35,22 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
     );
   }
 
-  if (isAuthLoading || !currentUser || isLoading || isGetUserLoading) {
-    return <LoadingButton />;
+  if (isAuthLoading || !currentUser || isGetUserLoading) {
+    return (
+      <Button disabled className="bg-gray-400 flex-1">
+        Loading...
+      </Button>
+    );
   }
 
   return (
-    <Button
-      onClick={handleCheckout}
-      disabled={disabled}
-      className="bg-orange-500 flex-1"
-    >
-      Proceed to Payment
-    </Button>
+    <form className="flex-1">
+      <script
+        src="https://checkout.razorpay.com/v1/payment-button.js"
+        data-payment_button_id="pl_QHS8pZKyf4PAGY"
+        async
+      ></script>
+    </form>
   );
 };
 

@@ -10,22 +10,13 @@ router.get("/", jwtCheck, jwtParse, (req, res) => {
 });
 
 // Create Razorpay checkout session
-router.post(
-  "/checkout/create-checkout-session",
-  jwtCheck,
-  jwtParse,
-  (req, res) => {
-    OrderController.createCheckoutSession(req, res);
-  }
-);
+router.post("/checkout/create-checkout-session", jwtCheck, jwtParse, (req, res) => {
+  OrderController.createCheckoutSession(req, res);
+});
 
-// Razorpay webhook handler
-router.post(
-  "/checkout/webhook",
-  express.json(), // Razorpay sends JSON, not raw like Stripe
-  (req, res) => {
-    OrderController.razorpayWebhookHandler(req, res);
-  }
-);
+// Razorpay webhook handler (must come AFTER express.raw middleware in main file)
+router.post("/checkout/webhook", express.json(), (req, res) => {
+  OrderController.razorpayWebhookHandler(req, res);
+});
 
 export default router;
