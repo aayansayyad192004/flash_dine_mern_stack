@@ -8,6 +8,7 @@ import ManageRestaurantPage from "./pages/ManageRestaurantPage";
 import SearchPage from "./pages/SearchPage";
 import DetailPage from "./pages/DetailPage";
 import OrderStatusPage from "./pages/OrderStatusPage";
+import PaymentPage from "./pages/PaymentPage";
 
 const AppRoutes = () => {
   return (
@@ -15,12 +16,13 @@ const AppRoutes = () => {
       <Route
         path="/"
         element={
-          <Layout >
+          <Layout>
             <HomePage />
           </Layout>
         }
       />
       <Route path="/auth-callback" element={<AuthCallbackPage />} />
+      
       <Route
         path="/search/:city"
         element={
@@ -37,6 +39,8 @@ const AppRoutes = () => {
           </Layout>
         }
       />
+      
+      {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
         <Route
           path="/order-status"
@@ -62,8 +66,18 @@ const AppRoutes = () => {
             </Layout>
           }
         />
+        {/* ✅ You can protect the payment page too if needed */}
+        <Route
+          path="/payment"
+          element={
+            <Layout>
+              <PaymentPage />
+            </Layout>
+          }
+        />
       </Route>
 
+      {/* Catch-all should always be last */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

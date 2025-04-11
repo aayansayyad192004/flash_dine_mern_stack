@@ -1,5 +1,6 @@
+// src/components/CheckoutButton.tsx
 import { useAuth0 } from "@auth0/auth0-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import LoadingButton from "./LoadingButton";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
@@ -7,25 +8,18 @@ import UserProfileForm, {
   UserFormData,
 } from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
-import { useState, useEffect } from "react";
 
 type Props = {
-  onCheckout: (userFormData: UserFormData) => void;
+  onCheckout: (userFormData: UserFormData) => Promise<any>; // must return order
   disabled: boolean;
   isLoading: boolean;
 };
 
 const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
-  const {
-    isAuthenticated,
-    isLoading: isAuthLoading,
-    loginWithRedirect,
-  } = useAuth0();
-
+  const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
-
-  const [showRazorpayButton, setShowRazorpayButton] = useState(false);
 
   const onLogin = async () => {
     await loginWithRedirect({
@@ -36,24 +30,17 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   };
 
   const handleCheckout = async (userFormData: UserFormData) => {
-    await onCheckout(userFormData);
-    setShowRazorpayButton(true);
-  };
-
-  useEffect(() => {
-    if (showRazorpayButton) {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/payment-button.js";
-      script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY");
-      script.async = true;
-
-      const form = document.getElementById("razorpay-button-container");
-      if (form) {
-        form.innerHTML = ""; // Clear previous if any
-        form.appendChild(script);
+    try {
+      const order = await onCheckout(userFormData);
+      if (order && order._id) {
+        navigate(`/payment?orderId=${order._id}`);
+      } else {
+        console.error("Order ID not found.");
       }
+    } catch (error) {
+      console.error("Checkout failed:", error);
     }
-  }, [showRazorpayButton]);
+  };
 
   if (!isAuthenticated) {
     return (
@@ -82,9 +69,6 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
           title="Confirm Delivery Details"
           buttonText="Continue to payment"
         />
-        {showRazorpayButton && (
-          <div id="razorpay-button-container" className="mt-4" />
-        )}
       </DialogContent>
     </Dialog>
   );
