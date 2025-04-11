@@ -30,7 +30,7 @@ const DetailPage = () => {
   }
 
   const { restaurant, isLoading } = useGetRestaurant(restaurantId);
-  const { createCheckoutSession, isLoading: isCheckoutLoading } = useCreateCheckoutSession();
+  const { createCheckoutSession} = useCreateCheckoutSession();
   const { data: currentUser } = useGetMyUser();
 
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
@@ -72,7 +72,7 @@ const DetailPage = () => {
     );
   };
 
-  const onCheckout = async () => {
+ const onCheckout = async () => {
     if (!restaurant || !currentUser) {
       console.error("Restaurant or user not loaded yet.");
       return;
@@ -145,11 +145,8 @@ const DetailPage = () => {
               removeFromCart={removeFromCart}
             />
             <CardFooter>
-              <CheckoutButton
-                disabled={cartItems.length === 0}
-                onCheckout={onCheckout}
-                isLoading={isCheckoutLoading}
-              />
+            <CheckoutButton />
+
             </CardFooter>
           </Card>
         </div>

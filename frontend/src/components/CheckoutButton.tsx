@@ -2,14 +2,10 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useGetMyUser } from "@/api/MyUserApi";
-import { toast } from "sonner"; // or your toast library
 import { useEffect } from "react";
+import { toast } from "sonner"; // Make sure you've installed and configured this or replace with your own toast lib
 
-type Props = {
-  disabled: boolean;
-};
-
-const CheckoutButton = ({ disabled }: Props) => {
+const CheckoutButton = () => {
   const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
@@ -23,7 +19,6 @@ const CheckoutButton = ({ disabled }: Props) => {
   };
 
   useEffect(() => {
-    // Trigger popup when component mounts (simulate order placed)
     toast.success("Your order has been placed!");
   }, []);
 
