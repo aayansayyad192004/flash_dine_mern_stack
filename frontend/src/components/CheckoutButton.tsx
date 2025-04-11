@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Button } from "./ui/button";
 import LoadingButton from "./LoadingButton";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
@@ -7,6 +7,7 @@ import UserProfileForm, {
   UserFormData,
 } from "@/forms/user-profile-form/UserProfileForm";
 import { useGetMyUser } from "@/api/MyUserApi";
+import { useEffect, useRef } from "react";
 
 type Props = {
   onCheckout: (userFormData: UserFormData) => void;
@@ -22,10 +23,14 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   } = useAuth0();
 
   const { pathname } = useLocation();
+  const { restaurantId } = useParams(); // ✅ extract restaurantId from URL
 
-  // ✅ No destructuring `data`, using directly returned `currentUser`
-  const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
+  const {
+    data: currentUser,
+    isLoading: isGetUserLoading,
+  } = useGetMyUser();
 
+  const razorpayFormRef = useRef<HTMLDivElement | null>(null);
 
   const onLogin = async () => {
     await loginWithRedirect({
@@ -34,6 +39,23 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
       },
     });
   };
+
+  useEffect(() => {
+    // ✅ Load Razorpay script dynamically inside the dialog
+    if (razorpayFormRef.current) {
+      const existingScript = document.querySelector(
+        "script[src='https://checkout.razorpay.com/v1/payment-button.js']"
+      );
+      if (!existingScript) {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/payment-button.js";
+        script.setAttribute("data-payment_button_id", "pl_QHS8pZKyf4PAGY"); // Your Razorpay button ID
+        script.async = true;
+        razorpayFormRef.current.innerHTML = ""; // Clear if re-rendered
+        razorpayFormRef.current.appendChild(script);
+      }
+    }
+  }, [razorpayFormRef]);
 
   if (!isAuthenticated) {
     return (
@@ -57,11 +79,20 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
       <DialogContent className="max-w-[425px] md:min-w-[700px] bg-gray-50">
         <UserProfileForm
           currentUser={currentUser}
-          onSave={onCheckout}
+          onSave={(formData: UserFormData) => {
+            // ✅ call your onCheckout function
+            onCheckout(formData);
+
+            // ✅ Optionally, you can update order status here using restaurantId
+            console.log("Checkout triggered for restaurant ID:", restaurantId);
+          }}
           isLoading={isGetUserLoading}
           title="Confirm Delivery Details"
           buttonText="Continue to payment"
         />
+
+        {/* ✅ Razorpay Button */}
+        <div ref={razorpayFormRef} className="mt-4"></div>
       </DialogContent>
     </Dialog>
   );
