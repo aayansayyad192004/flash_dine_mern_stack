@@ -8,6 +8,7 @@ import ManageRestaurantPage from "./pages/ManageRestaurantPage";
 import SearchPage from "./pages/SearchPage";
 import DetailPage from "./pages/DetailPage";
 import OrderStatusPage from "./pages/OrderStatusPage";
+import OrderSuccessPage from "./pages/OrderSuccessPage"; 
 
 const AppRoutes = () => {
   return (
@@ -20,8 +21,9 @@ const AppRoutes = () => {
           </Layout>
         }
       />
+
       <Route path="/auth-callback" element={<AuthCallbackPage />} />
-      
+
       <Route
         path="/search/:city"
         element={
@@ -30,6 +32,7 @@ const AppRoutes = () => {
           </Layout>
         }
       />
+
       <Route
         path="/detail/:restaurantId"
         element={
@@ -38,8 +41,18 @@ const AppRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* Protected Routes */}
+
+      {/* ✅ Public Order Success Page (for Razorpay redirect) */}
+      <Route
+        path="/order-success"
+        element={
+          <Layout showHero={false}>
+            <OrderSuccessPage />
+          </Layout>
+        }
+      />
+
+      {/* ✅ Protected Routes */}
       <Route element={<ProtectedRoute />}>
         <Route
           path="/order-status"
@@ -65,11 +78,9 @@ const AppRoutes = () => {
             </Layout>
           }
         />
-        {/* ✅ You can protect the payment page too if needed */}
-        
       </Route>
 
-      {/* Catch-all should always be last */}
+      {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
