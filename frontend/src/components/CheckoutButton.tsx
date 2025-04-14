@@ -9,7 +9,7 @@ type Props = {
   isLoading: boolean;
 };
 
-const CheckoutButton = ({  isLoading }: Props) => {
+const CheckoutButton = ({ isLoading }: Props) => {
   const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();

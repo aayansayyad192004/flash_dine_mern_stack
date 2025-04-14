@@ -31,7 +31,7 @@ const DetailPage = () => {
 
   const { restaurant, isLoading } = useGetRestaurant(restaurantId);
   const { createCheckoutSession, isLoading: isCheckoutLoading } = useCreateCheckoutSession();
-  const { data :currentUser } = useGetMyUser(); // ✅ Fixed usage
+  const { data: currentUser } = useGetMyUser(); // ✅ Fixed usage
 
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const storedCartItems = sessionStorage.getItem(`cartItems-${restaurantId}`);
@@ -105,12 +105,11 @@ const DetailPage = () => {
   return (
     <div className="flex flex-col gap-10">
       <AspectRatio ratio={16 / 5}>
-      <img
-  src={restaurant.imageUrl || "/default-restaurant.jpg"}
-  className="rounded-md object-cover h-full w-full"
-  alt={ "Restaurant image"}
-/>
-
+        <img
+          src={restaurant.imageUrl || "/default-restaurant.jpg"}
+          className="rounded-md object-cover h-full w-full"
+          alt={"Restaurant image"}
+        />
       </AspectRatio>
 
       <div className="grid md:grid-cols-[4fr_2fr] gap-5 md:px-32">
