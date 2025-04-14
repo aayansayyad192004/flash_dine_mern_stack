@@ -1,7 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
-import LoadingButton from "./LoadingButton";
 import { useGetMyUser } from "@/api/MyUserApi";
 
 type Props = {
@@ -10,10 +9,9 @@ type Props = {
   isLoading: boolean;
 };
 
-const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
+const CheckoutButton = ({  isLoading }: Props) => {
   const { isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const { data: currentUser, isLoading: isGetUserLoading } = useGetMyUser();
 
   const onLogin = async () => {
@@ -22,19 +20,6 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
         returnTo: pathname,
       },
     });
-  };
-
-  const handleCheckout = async () => {
-    try {
-      const order = await onCheckout();
-      if (order && order._id) {
-        navigate(`/payment?orderId=${order._id}`);
-      } else {
-        console.error("Order ID not found.");
-      }
-    } catch (error) {
-      console.error("Checkout failed:", error);
-    }
   };
 
   if (!isAuthenticated) {
@@ -46,17 +31,17 @@ const CheckoutButton = ({ onCheckout, disabled, isLoading }: Props) => {
   }
 
   if (isAuthLoading || !currentUser || isLoading || isGetUserLoading) {
-    return <LoadingButton />;
+    return <Button className="bg-orange-500 flex-1" disabled>Loading...</Button>;
   }
 
   return (
-    <Button
-      onClick={handleCheckout}
-      disabled={disabled}
-      className="bg-orange-500 flex-1"
-    >
-      Proceed to Payment
-    </Button>
+    <form>
+      <script
+        src="https://checkout.razorpay.com/v1/payment-button.js"
+        data-payment_button_id="pl_QHS8pZKyf4PAGY"
+        async
+      />
+    </form>
   );
 };
 
