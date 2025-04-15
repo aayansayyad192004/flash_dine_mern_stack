@@ -1,18 +1,12 @@
 import { FC } from "react";
 import { CheckCircle, UtensilsCrossed } from "lucide-react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const OrderSuccessPage: FC = () => {
   return (
-    <motion.div
-      className="min-h-screen flex items-center justify-center bg-yellow-50 px-4"
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6 }}
-    >
-      <div className="bg-white shadow-xl rounded-2xl p-8 max-w-md w-full text-center border border-yellow-200">
+    <div className="min-h-screen flex items-center justify-center bg-yellow-50 px-4">
+      <div className="bg-white shadow-xl rounded-2xl p-8 max-w-md w-full text-center border border-yellow-200 transition-all duration-500">
         <div className="flex justify-center mb-4">
           <div className="bg-yellow-100 rounded-full p-4">
             <UtensilsCrossed size={48} className="text-yellow-500" />
@@ -45,7 +39,7 @@ const OrderSuccessPage: FC = () => {
           </Button>
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
