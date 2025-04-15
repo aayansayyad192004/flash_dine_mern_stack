@@ -8,7 +8,6 @@ import ManageRestaurantPage from "./pages/ManageRestaurantPage";
 import SearchPage from "./pages/SearchPage";
 import DetailPage from "./pages/DetailPage";
 import OrderStatusPage from "./pages/OrderStatusPage";
-import OrderSuccessPage from "./pages/OrderSuccessPage"; // ✅ Add this import
 
 const AppRoutes = () => {
   return (
@@ -42,15 +41,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* ✅ Public Order Success Page (for Razorpay redirect) */}
-      <Route
-        path="/order-success"
-        element={
-          <Layout showHero={false}>
-            <OrderSuccessPage />
-          </Layout>
-        }
-      />
+      
 
       {/* ✅ Protected Routes */}
       <Route element={<ProtectedRoute />}>
